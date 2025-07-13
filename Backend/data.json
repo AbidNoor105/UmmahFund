@@ -1,0 +1,28 @@
+{
+  "requests_database": [
+    {
+      "name": "Tyrone",
+      "amount": 0,
+      "reason": "I have open heart surgery",
+      "status": "funded"
+    },
+    {
+      "name": "Abidora",
+      "amount": 0,
+      "reason": "heart surgery",
+      "status": "funded"
+    },
+    {
+      "name": "Zayd",
+      "amount": 800,
+      "reason": "Heart surgery",
+      "status": "pending"
+    },
+    {
+      "name": "Sultan",
+      "amount": 1000,
+      "reason": "Brain surgery",
+      "status": "pending"
+    }
+  ]
+}

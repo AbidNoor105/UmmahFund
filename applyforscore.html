@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ummah Score Application</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" />
+</head>
+<body class="bg-gray-50 font-sans">
+
+  <div class="flex">
+
+    <!-- Sidebar -->
+    <div class="w-64 bg-gray-100 p-6 flex-shrink-0 min-h-screen">
+      <h2 class="text-lg font-semibold mb-4">Menu</h2>
+      <ul class="space-y-2 text-sm">
+        <li><a href="homepage.html" class="text-blue-600 hover:underline">Homepage</a></li>
+        <li><a href="funding.html" class="text-blue-600 hover:underline">Fund</a></li>
+        <li><a href="request.html" class="text-blue-600 hover:underline">Request</a></li>
+        <li><a href="amanah-score.html" class="text-blue-600 hover:underline">Amanah Score</a></li>
+        <li><a href="applyforscore.html" class="text-blue-600 hover:underline">Apply for Amanah Score</a></li>
+      </ul>
+
+      <div class="mt-10 text-sm">
+        <h2 class="text-lg font-semibold mb-2">Get in touch</h2>
+        <ul class="space-y-1 text-gray-700">
+          <li>Email: <a href="#" class="text-blue-600 hover:underline">information@untitled.tld</a></li>
+          <li>Phone: (000) 000-0000</li>
+          <li>Address: 1234 Somewhere Rd #8254, Nashville, TN</li>
+        </ul>
+      </div>
+
+      <footer class="mt-10 text-xs text-gray-500">
+        <p>&copy; Ummah Fund. Images: <a href="https://unsplash.com" class="underline">Unsplash</a>. Design: <a href="https://html5up.net" class="underline">HTML5 UP</a>.</p>
+      </footer>
+    </div>
+
+    <!-- Main Application Form -->
+    <div class="flex-grow p-10">
+      <div class="flex flex-col items-center py-10">
+        <h1 class="text-3xl font-bold text-gray-800">Ummah Score Application</h1>
+        <p class="text-gray-600 mt-2">Complete your application to discover your Ummah Score and unlock Islamic financing</p>
+
+        <div class="w-full max-w-2xl mt-8">
+          <div class="h-2 rounded bg-blue-100">
+            <div id="progress-bar" class="h-full bg-blue-500 rounded transition-all duration-300" style="width: 20%"></div>
+          </div>
+
+          <form id="multi-step-form" class="mt-6 bg-white p-6 rounded-lg shadow">
+            <!-- Step 1 -->
+            <div class="step" id="step-1">
+              <h2 class="text-xl font-semibold mb-4">Personal Information</h2>
+              <div class="grid grid-cols-2 gap-4">
+                <input type="text" placeholder="First Name" class="border p-2 rounded" />
+                <input type="text" placeholder="Last Name" class="border p-2 rounded" />
+                <input type="email" placeholder="Email Address" class="border p-2 rounded col-span-2" />
+                <input type="tel" placeholder="Phone Number" class="border p-2 rounded" />
+                <input type="date" placeholder="Date of Birth" class="border p-2 rounded" />
+              </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="step hidden" id="step-2">
+              <h2 class="text-xl font-semibold mb-4">Financial Information</h2>
+              <select class="border p-2 rounded w-full mb-2">
+                <option>Annual Income</option>
+              </select>
+              <select class="border p-2 rounded w-full mb-2">
+                <option>Employment Status</option>
+              </select>
+              <select class="border p-2 rounded w-full mb-2">
+                <option>Current Credit Score (if known)</option>
+              </select>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="step hidden" id="step-3">
+              <h2 class="text-xl font-semibold mb-4">Family & Community Trust</h2>
+              <textarea placeholder="Family Financial History" class="border p-2 rounded w-full mb-2"></textarea>
+              <textarea placeholder="Family References (2-3)" class="border p-2 rounded w-full mb-2"></textarea>
+              <textarea placeholder="Community References" class="border p-2 rounded w-full mb-2"></textarea>
+              <textarea placeholder="Islamic Organizations" class="border p-2 rounded w-full mb-2"></textarea>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="step hidden" id="step-4">
+              <h2 class="text-xl font-semibold mb-4">Previous Payment History</h2>
+              <select class="border p-2 rounded w-full mb-2">
+                <option>Previous Islamic Financing Experience</option>
+              </select>
+              <textarea placeholder="Payment History Details" class="border p-2 rounded w-full mb-2"></textarea>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="step hidden" id="step-5">
+              <h2 class="text-xl font-semibold mb-4">Trust Building & Agreement</h2>
+              <p class="mb-4">Trust Building Fee: <strong>$25</strong></p>
+              <label class="block mb-2"><input type="checkbox" class="mr-2" /> I agree to pay the $25 trust-building fee</label>
+              <label class="block mb-4"><input type="checkbox" class="mr-2" /> I confirm my commitment to Sharia-compliant financing principles</label>
+              <button type="submit" class="w-full bg-blue-500 text-white px-4 py-2 rounded">Pay Trust Fee & Complete Application</button>
+            </div>
+
+            <!-- Navigation -->
+            <div class="flex justify-between mt-6">
+              <button type="button" id="prevBtn" class="bg-gray-300 px-4 py-2 rounded">Previous</button>
+              <button type="button" id="nextBtn" class="bg-blue-500 text-white px-4 py-2 rounded">Next Step</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let currentStep = 1;
+    const totalSteps = 5;
+    const progressBar = document.getElementById("progress-bar");
+
+    function showStep(step) {
+      document.querySelectorAll(".step").forEach((s, i) => {
+        s.classList.toggle("hidden", i !== step - 1);
+      });
+      progressBar.style.width = `${(step / totalSteps) * 100}%`;
+    }
+
+    document.getElementById("nextBtn").addEventListener("click", () => {
+      if (currentStep < totalSteps) {
+        currentStep++;
+        showStep(currentStep);
+      }
+    });
+
+    document.getElementById("prevBtn").addEventListener("click", () => {
+      if (currentStep > 1) {
+        currentStep--;
+        showStep(currentStep);
+      }
+    });
+
+    showStep(currentStep);
+  </script>
+
+</body>
+</html>
