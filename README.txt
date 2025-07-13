@@ -1,6 +1,3 @@
-Of course. Here is a complete README for your project, with the instructions structured as you requested.
-
------
 
 # Ummah Fund 🕌
 
