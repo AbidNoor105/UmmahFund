@@ -1,170 +1,129 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-
-let funding_database = [
-    {
-        "name": "Abid",
-        "amount": 1000,
-        "type": "donation"
-    },
-    {
-        "name": "Yunus",
-        "amount": 5000,
-        "type": "loan"
-    },
-    {
-        "name": "Ahmad",
-        "amount": 10000,
-        "type": "donation"
-    },
-]
-
-let requests_database = [
-    {
-        "name": "Haroon",
-        "amount": 1000,
-        "reason": "I want to build a PC"
-    },
-    {
-        "name": "Tyrone",
-        "amount": 12000,
-        "type": "I have open heart surgery"
-    },
-    {
-        "name": "Deez",
-        "amount": 3000,
-        "type": "to buy a car my family needs"
-    },
-]
+import * as fs from 'fs/promises';
+import data from "./data.json" assert { type: "json" };
 
 const API_KEY = "AIzaSyBZSUtjX1HLWfc8xnzpx6pdCD9H1dwHkwk"; // Replace with your actual API key
 const genAI = new GoogleGenerativeAI(API_KEY);
 
-async function generateAllocationPlan() {
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash", // Still recommend 1.5-flash for context
-      generationConfig: {
-        responseMimeType: "application/json", // Crucial for JSON output
-        responseSchema: { // Define your expected JSON schema here
-          type: "object",
-          properties: {
-            totalFundsAvailable: {
-              type: "number",
-              description: "Total funds available from all funders."
-            },
-            totalFundsRequested: {
-              type: "number",
-              description: "Total funds requested by all individuals."
-            },
-            allocations: {
-              type: "array",
-              description: "List of individual allocations.",
-              items: {
-                type: "object",
-                properties: {
-                  recipientName: {
-                    type: "string",
-                    description: "Name of the person receiving funds."
-                  },
-                  amountReceived: {
-                    type: "number",
-                    description: "Amount of money allocated to this recipient."
-                  },
-                  fundingType: {
-                    type: "string",
-                    enum: ["donation", "loan"],
-                    description: "Type of funding (donation or loan)."
-                  },
-                  reasonForFunding: {
-                    type: "string",
-                    description: "The original reason for the funding request."
-                  },
-                  fundedBy: {
-                    type: "array",
-                    description: "List of funders contributing to this allocation.",
-                    items: {
-                      type: "object",
-                      properties: {
-                        funderName: {
-                          type: "string",
-                          description: "Name of the funder."
-                        },
-                        amountContributed: {
-                          type: "number",
-                          description: "Amount contributed by this specific funder for this allocation."
-                        }
-                      },
-                      required: ["funderName", "amountContributed"]
-                    }
-                  }
-                },
-                required: ["recipientName", "amountReceived", "fundingType", "reasonForFunding", "fundedBy"]
-              }
-            },
-            unallocatedFunds: {
-              type: "number",
-              description: "Any funds that could not be allocated."
-            },
-            explanation: {
-              type: "string",
-              description: "A natural language explanation of the allocation decisions."
-            }
-          },
-          required: ["totalFundsAvailable", "totalFundsRequested", "allocations", "unallocatedFunds", "explanation"]
-        }
-      }
-    });
-  
-    const prompt = `
-      You are an AI assistant designed to facilitate funding distribution for a Muslim community.
-      Your goal is to allocate funds from donors and lenders to individuals with funding requests, based on the provided data.
-  
-      Here is the available funding:
-      ${JSON.stringify(funding_database, null, 2)}
-  
-      Here are the funding requests:
-      ${JSON.stringify(requests_database, null, 2)}
-  
-      **Rules for Allocation:**
-      1.  **Donations:** Funds marked as "donation" can be freely distributed to any request.
-      2.  **Loans:** Funds marked as "loan" should ideally be allocated as loans, with an expectation of repayment. Assume loans are given with the expectation of full repayment by the recipient.
-      3.  **Prioritization:** Prioritize critical needs (e.g., medical emergencies, essential family needs) over discretionary spending (e.g., building a PC).
-      4.  **Fairness:** Aim to distribute funds equitably while addressing urgent needs.
-      5.  **Be Comprehensive:** Ensure all funds are considered for allocation and all requests are addressed as much as possible.
-  
-      Provide the allocation plan in JSON format according to the specified schema.
-      `;
-  
+async function saveDataToFile() {
     try {
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      const jsonText = response.text(); // Get the response text, which should be JSON
-      console.log("Raw JSON response from Gemini:", jsonText);
-  
-      // Parse the JSON string into a JavaScript object
-      const allocationPlan = JSON.parse(jsonText);
-      console.log("\nParsed Allocation Plan (JavaScript Object):", allocationPlan);
-  
-      // Now you can access the data as a regular JavaScript object
-      console.log("\nTotal Funds Available:", allocationPlan.totalFundsAvailable);
-      console.log("Allocations:", allocationPlan.allocations);
-      console.log("First allocation recipient:", allocationPlan.allocations[0].recipientName);
-  
-      // Example: Exporting to a file (Node.js environment)
-      // You'd typically do this in a Node.js backend
-      const fs = require('fs');
-      fs.writeFileSync('allocation_plan.json', JSON.stringify(allocationPlan, null, 2));
-      console.log("\nAllocation plan saved to allocation_plan.json");
-  
-      return allocationPlan; // Return the parsed object for further use in your project
-  
+        await fs.writeFile('./data.json', JSON.stringify(data, null, 2));
     } catch (error) {
-      console.error("Error generating content or parsing response:", error);
-      // Log the raw response if parsing fails to debug
-      if (error instanceof SyntaxError) {
-        console.error("Failed to parse JSON. Raw response text might not be valid JSON.");
-        console.error("Raw text:", jsonText); // Make sure jsonText is accessible here
-      }
+        console.error("Error saving data to file:", error);
     }
-  }
-  
-  generateAllocationPlan();
+}
+
+async function processApplication(applicantName, amountNeeded, reason) {
+    const model = genAI.getGenerativeModel({
+        model: "gemini-1.5-flash",
+        generationConfig: { responseMimeType: "application/json" }
+    });
+
+    const validationPrompt = `
+    Review this funding application for a Muslim charity. Output JSON: {isValid: boolean, reasoning: string}.
+    Application: Name: ${applicantName}, Amount: ${amountNeeded}, Reason: ${reason}
+    Rules: Prioritize essential needs (medical, food) over luxury (gaming PC). Reason must be clear and align with charitable principles.
+    `;
+
+    try {
+        const result = await model.generateContent(validationPrompt);
+        const validationResult = JSON.parse(result.response.text());
+
+        if (validationResult.isValid) {
+            const newApplication = {
+                name: applicantName,
+                amount: amountNeeded,
+                reason: reason,
+                status: "pending"
+            };
+            data.requests_database.push(newApplication);
+            await saveDataToFile();
+            console.log(`✅ Added application for ${applicantName}. Reason: ${validationResult.reasoning}`);
+            return newApplication;
+        } else {
+            console.log(`❌ Rejected application for ${applicantName}. Reason: ${validationResult.reasoning}`);
+            return null;
+        }
+    } catch (error) {
+        console.error(`Error processing application for ${applicantName}:`, error);
+        return null;
+    }
+}
+
+async function donateFundsToRequests(funderName, fundAmount, fundType) {
+    if (fundAmount <= 0) return null;
+
+    const model = genAI.getGenerativeModel({
+      model: "gemini-1.5-flash",
+      generationConfig: { responseMimeType: "application/json" }
+    });
+
+    const pendingRequests = data.requests_database.filter(req => req.status === 'pending' && req.amount > 0);
+
+    const prompt = `
+      Allocate an incoming fund to the most deserving pending funding requests. Output JSON: {fundAllocations: [{recipientName: string, amountReceived: number}], totalAllocatedFromFund: number, remainingFundAmount: number, message: string}.
+      Incoming Fund: Funder: ${funderName}, Amount: ${fundAmount}, Type: ${fundType}
+      Pending Requests: ${JSON.stringify(pendingRequests, null, 2)}
+      Rules: Prioritize critical needs. Use donation funds generally; loan funds for loans if possible. Fulfill requests optimally. Only fund pending requests with amount > 0. Deduct from request's 'amount', set status to 'funded' if amount <= 0.
+      `;
+
+    try {
+        const result = await model.generateContent(prompt);
+        const allocationResult = JSON.parse(result.response.text());
+
+        let currentFundRemaining = fundAmount;
+
+        for (const fundAllocation of allocationResult.fundAllocations) {
+            const requestToUpdate = data.requests_database.find(
+                req => req.name === fundAllocation.recipientName && req.status === 'pending' && req.amount > 0
+            );
+
+            if (requestToUpdate) {
+                const needed = requestToUpdate.amount;
+                const amountToApply = Math.min(fundAllocation.amountReceived, needed, currentFundRemaining);
+
+                if (amountToApply > 0) {
+                    requestToUpdate.amount -= amountToApply;
+                    currentFundRemaining -= amountToApply;
+
+                    if (requestToUpdate.amount <= 0) {
+                        requestToUpdate.status = "funded";
+                        requestToUpdate.amount = 0; // Ensure it's not negative
+                        console.log(`✅ ${requestToUpdate.name} fully funded.`);
+                    } else {
+                        console.log(`Partial funding for ${requestToUpdate.name}: $${amountToApply}. $${requestToUpdate.amount} still needed.`);
+                    }
+                }
+            }
+        }
+
+        allocationResult.remainingFundAmount = currentFundRemaining;
+        allocationResult.totalAllocatedFromFund = fundAmount - currentFundRemaining;
+
+        await saveDataToFile();
+        console.log(`\nFunds from ${funderName} allocated. Message: ${allocationResult.message}`);
+        return allocationResult;
+    } catch (error) {
+        console.error(`Error allocating fund from ${funderName}:`, error);
+        return null;
+    }
+}
+
+// --- Main Application Flow ---
+async function runApp() {
+    console.log("--- Starting Donation and Application Demonstration ---");
+    console.log("Initial requests_database:", JSON.stringify(data.requests_database, null, 2));
+
+    // Example 1: Add a new application
+    // console.log("\n--- Adding a new application ---");
+    // await processApplication("Kareem", 5000, "To cover urgent medical expenses for my child.");
+
+    // Example 2: Simulate a donation to fund existing requests
+    console.log("\n--- Simulating a Donation from 'FunderX' ($3000) ---");
+    await donateFundsToRequests("FunderX", 3000, "donation");
+
+    console.log("\n--- End of Demonstration ---");
+    console.log("Final requests_database:", JSON.stringify(data.requests_database, null, 2));
+}
+
+runApp();

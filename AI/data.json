@@ -1,0 +1,22 @@
+{
+  "requests_database": [
+    {
+      "name": "Haroon",
+      "amount": 2000,
+      "reason": "I want to build a PC",
+      "status": "pending"
+    },
+    {
+      "name": "Tyrone",
+      "amount": 10500,
+      "reason": "I have open heart surgery",
+      "status": "pending"
+    },
+    {
+      "name": "Kareem",
+      "amount": 2500,
+      "reason": "To cover urgent medical expenses for my child.",
+      "status": "pending"
+    }
+  ]
+}
